@@ -30,7 +30,7 @@ void save2pngs(string videoName, string outdir, string postFix) {
   }
 }
 
-void save2avi(string infile, string outfile) {
+void save2avi(string infile, string outfile, int startFrame=0, int endFrame = -1) {
 
   VideoWriter writer = VideoWriter(outfile.c_str(),
 				   CV_FOURCC('F','M','P','4'),
@@ -41,7 +41,6 @@ void save2avi(string infile, string outfile) {
     cerr << "File not opened!" << endl; 
   }  
 
-  
   CvCapture* capture = cvCreateFileCapture(infile.c_str());
   if (!capture) {
     std::cerr << "File: " << infile << " not found" << std::endl;
@@ -50,12 +49,18 @@ void save2avi(string infile, string outfile) {
     
   IplImage* frame; 
   unsigned int ind = 0;  
-  //while (true) {
-  for (int i = 0; i < 4900; i++) {
+  while (true) {
     cout << "processing: " << ind << endl;
     frame = cvQueryFrame(capture);
     if (!frame) break;
-
+    
+    if (ind < startFrame) {
+      ind++;
+      continue;
+    }
+    
+    if (endFrame > 0 && ind >= endFrame) break;
+    
     // possible memory leak
     Mat imgMat(frame);
     writer << imgMat;
@@ -65,17 +70,15 @@ void save2avi(string infile, string outfile) {
 
 
 int main(int argc, char* argv[]) {
-  vector<string> names(1);
-  names[0] = "left"; //names[1] = "center"; names[2] = "right";
-  string prefix = "./recordings/2013-09-13_11:23_";
-  // string outprefix = "./recordings/2013-09-13_11:23_2_";
-  
+  vector<string> names(3);
+  names[0] = "left"; names[1] = "center"; names[2] = "right";
+  string inprefix = "./recordings/2013-09-23_12:44_";
+  string outprefix = "./recordings_tmp/2013-09-23_12:44_";
+  int startFrame = 275, endFrame = -1;
   
   for (int i = 0; i < names.size(); i++)
-    save2pngs(prefix + names[i] + ".avi", "./images/", "_"+names[i]+".png");
-  //save2avi(inprefix + names[i] + ".avi", outprefix+ names[i]+".avi");
-  
-
+    //save2pngs(prefix + names[i] + ".avi", "./images/", "_"+names[i]+".png");
+    save2avi(inprefix + names[i] + ".avi", outprefix+ names[i]+".avi", startFrame, endFrame);
   
   return 0;
 }

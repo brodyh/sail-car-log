@@ -336,7 +336,7 @@ template <typename T>
 void cropImage(const std::vector<T>& img, const std::vector<int>& dim,
 	       int cmin, int cmax, int rmin, int rmax, std::vector<T>* cropped) {
   cropped->resize( (cmax-cmin) * (rmax-rmin) );
-  cropImage(img.data(), dim[0], dim[1], cmin, cmax, rmin, rmax, cropped->data());
+  cropImage(img.data(), dim[1], dim[0], cmin, cmax, rmin, rmax, cropped->data());
 }
 
 void cropTriclopsColorImage(const TriclopsColorImage& img,
@@ -372,13 +372,13 @@ void cropTriclopsImage16(const TriclopsImage16& img,
 
 int main(int argc, char* argv[]) {
   String indir = "./recordings/";
-  String outdir = "./recordings_results2/";
+  String outdir = "./recordings_results/";
   
   DisparityMethod method = OPENCV;
   bool upsidedown = false;
   int numCameras=3;
   int maxDisparity = 48;
-  int skipCount = 250;
+  int skipCount = 300;
   bool saveDisparity = true;
   bool cropMaxDisparity = true;  
   bool shortBaseline = true;
@@ -453,7 +453,7 @@ int main(int argc, char* argv[]) {
   int fileInd = 0;
   while (!prefixes.empty()) {
     
-    // if (strcmp(prefixes.front().c_str(), "./recordings//2013-09-13_16:44") != 0) {
+    // if (strcmp(prefixes.front().c_str(), "./recordings//2013-09-16_13:22") != 0) {
     //   prefixes.pop();
     //   continue;
     // }
@@ -569,7 +569,7 @@ int main(int argc, char* argv[]) {
       if (shortBaseline) {
 	// get depth
 	std::vector<float> depth;
-	disparity2depth(shortContext, shortDepthImage16Left, maxDisparity, &depth, true);
+	disparity2depth(shortContext, shortDepthImage16Left, maxDisparity, &depth, "short", true);
 	rectifyColor(shortContext, inputs[0], &shortColorImage);
 	
 	// save results
@@ -586,7 +586,7 @@ int main(int argc, char* argv[]) {
 	  std::vector<int> croppedDepthDim(2);
 	  croppedDepthDim[0] = (depthDim[0]-maxDisparity); croppedDepthDim[1] = depthDim[1];
 	  cropImage(depth, depthDim, maxDisparity, depthDim[0], 0, depthDim[1], &croppedDepth);
-	  writeBin((outPrefix+"short_depth.bin").c_str(), depth, croppedDepthDim, FORMAT_FLOAT);
+	  writeBin((outPrefix+"short_depth.bin").c_str(), croppedDepth, croppedDepthDim, FORMAT_FLOAT);
 
 	  // save disparity
 	  if (saveDisparity) {
@@ -616,7 +616,7 @@ int main(int argc, char* argv[]) {
       if (wideBaseline) {
 	// get depth
 	std::vector<float> depth;
-	disparity2depth(wideContext, wideDepthImage16Left, maxDisparity, &depth, true);
+	disparity2depth(wideContext, wideDepthImage16Left, maxDisparity, &depth, "wide", true);
 	rectifyColor(wideContext, inputs[0], &wideColorImage);
 	
 	// save results
@@ -633,7 +633,7 @@ int main(int argc, char* argv[]) {
 	  std::vector<int> croppedDepthDim(2);
 	  croppedDepthDim[0] = (depthDim[0]-maxDisparity); croppedDepthDim[1] = depthDim[1];
 	  cropImage(depth, depthDim, maxDisparity, depthDim[0], 0, depthDim[1], &croppedDepth);
-	  writeBin((outPrefix+"wide_depth.bin").c_str(), depth, croppedDepthDim, FORMAT_FLOAT);
+	  writeBin((outPrefix+"wide_depth.bin").c_str(), croppedDepth, croppedDepthDim, FORMAT_FLOAT);
 
 	  // save disparity
 	  if (saveDisparity) {
