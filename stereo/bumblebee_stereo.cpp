@@ -153,16 +153,17 @@ void opencvStereo(const TriclopsImage& left, const TriclopsImage& right,
     // run opencv stereo
     cv::StereoSGBM sgbm;
     sgbm.SADWindowSize = 9;
+    int number_of_image_channels = 3;
     sgbm.numberOfDisparities = maxDisparity;//192;
     sgbm.preFilterCap = 4;
-    sgbm.minDisparity = 0; //-64; 
-    sgbm.uniquenessRatio = 1;
-    // sgbm.speckleWindowSize = 150;
-    // sgbm.speckleRange = 2;
-    sgbm.disp12MaxDiff = 20;//10;
+    sgbm.minDisparity = 0;
+    sgbm.uniquenessRatio = 0;
+    sgbm.speckleWindowSize = 0;//150;
+    sgbm.speckleRange = 0;//2;
+    sgbm.disp12MaxDiff = -1;//20;//10;
     sgbm.fullDP = true;
-    sgbm.P1 = 600;
-    sgbm.P2 = 2400;
+    sgbm.P1 = 8*number_of_image_channels*sgbm.SADWindowSize*sgbm.SADWindowSize; // 600
+    sgbm.P2 = 32*number_of_image_channels*sgbm.SADWindowSize*sgbm.SADWindowSize; // 2400;
     sgbm(matLeft, matRight, matDispLeft);
 
     // allocate data

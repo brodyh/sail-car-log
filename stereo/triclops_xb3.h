@@ -322,9 +322,12 @@ void disparity2depth(const TriclopsContext& context,
       
       // Convert all bad depth values to max
       // based on the larges depth observed (triclops documentation doesn't seem to mention it :-\)
-      if ((*xyz)[pix+2] == 0.0f && disp.data[c+r*width] == (unsigned short)0)
-	if (c >= maxDisparity) 
-	  (*xyz)[pix+2] = (!strcmp(baseline, "wide")) ? 169.36311f : 84.2419434f;
+      // if ((*xyz)[pix+2] == 0.0f && disp.data[c+r*width] == (unsigned short)0)
+      // 	if (c >= maxDisparity) 
+      // 	  (*xyz)[pix+2] = (!strcmp(baseline, "wide")) ? 169.36311f : 84.2419434f;
+
+
+      
 	  //(*xyz)[pix+2] =  84.2419434f;
 
 	// if (c < 35)
