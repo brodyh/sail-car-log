@@ -14,10 +14,11 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/legacy/legacy.hpp"
 #include "opencv2/contrib/contrib.hpp"
 
 
-#include "bumblebee_xb3.h"
+//#include "bumblebee_xb3.h"
 #include "triclops_xb3.h"
 #include "lodepng.h"
 #include "pnmutils.h"
@@ -262,10 +263,17 @@ std::vector<IplImage*> nextFrame(const std::vector<CvCapture*>& captures) {
   int nFinished = 0;      
   for (int i = 0; i < frames.size(); i++) {
     frames[i] = cvQueryFrame(captures[i]);
-    if (!frames[i]) nFinished++;
+    if (!frames[i]) {
+      std::cout << "Frame " << i << " finished" << std::endl;
+      nFinished++;
+    }
   }
 
-  assert(nFinished == 0 || nFinished == frames.size());  
+  if (!(nFinished == 0 || nFinished == frames.size())) {
+    std::cout << "nFinished " << nFinished << " frames.size() " << frames.size() << std::cout;
+    exit(-1);
+  }
+  // assert(nFinished == 0 || nFinished == frames.size());      
   if (nFinished == frames.size())
     frames.resize(0);
   return frames;
@@ -371,16 +379,21 @@ void cropTriclopsImage16(const TriclopsImage16& img,
 
 
 int main(int argc, char* argv[]) {
-  String indir = "./recordings/";
-  String outdir = "./recordings_results/";
+  //String indir = "./recordings/";
+  String dir = argv[1];
+  String indir = "/scail/group/deeplearning/sail-deep-gpu/brodyh/recordings/"+dir;
+  String outdir = "/scail/group/deeplearning/sail-deep-gpu/brodyh/recordings_results";
+
+  int skipCount = 0;
+  if (argc == 3) 
+    skipCount = atoi(argv[2]);
   
   DisparityMethod method = OPENCV;
   bool upsidedown = false;
   int numCameras=3;
   int maxDisparity = 48;
-  int skipCount = 300;
-  bool saveDisparity = true;
-  bool cropMaxDisparity = true;  
+  bool saveDisparity = false;
+  bool cropMaxDisparity = false;  
   bool shortBaseline = true;
   bool wideBaseline = true;
   std::vector<int> depthDim(2);

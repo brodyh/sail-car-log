@@ -2,42 +2,42 @@
 #include <triclops.h>
 #include <assert.h>
 #include <math.h>
-#include "bumblebee_xb3.h"
+//#include "bumblebee_xb3.h"
 #include "lodepng.h"
 
 #pragma once
 
-void flycap2triclops(const Image& one, const Image& two, TriclopsInput* merged) {
-  // NEVER TESTED/DEBUGED BECAREFUL!!!!  
-  Image mono_one, mono_two;
-  one.Convert( PIXEL_FORMAT_MONO8, &mono_one );
-  two.Convert( PIXEL_FORMAT_MONO8, &mono_two );
+// void flycap2triclops(const Image& one, const Image& two, TriclopsInput* merged) {
+//   // NEVER TESTED/DEBUGED BECAREFUL!!!!  
+//   Image mono_one, mono_two;
+//   one.Convert( PIXEL_FORMAT_MONO8, &mono_one );
+//   two.Convert( PIXEL_FORMAT_MONO8, &mono_two );
 
-  if (mono_one.GetCols() != mono_two.GetCols() or mono_one.GetRows() != mono_two.GetRows() or
-      mono_one.GetDataSize() != mono_two.GetDataSize()) {
-    printf("Error: Image sizes must match");
-    exit(-1);
-  }
+//   if (mono_one.GetCols() != mono_two.GetCols() or mono_one.GetRows() != mono_two.GetRows() or
+//       mono_one.GetDataSize() != mono_two.GetDataSize()) {
+//     printf("Error: Image sizes must match");
+//     exit(-1);
+//   }
 
-  // free previous type
-  // if (merged->u.rgb.red) delete merged->u.rgb.red;
-  // if (merged->u.rgb.green) delete merged->u.rgb.green;
-  // if (merged->u.rgb.blue) delete merged->u.rgb.blue;
-  unsigned int dataSize = mono_one.GetDataSize();
+//   // free previous type
+//   // if (merged->u.rgb.red) delete merged->u.rgb.red;
+//   // if (merged->u.rgb.green) delete merged->u.rgb.green;
+//   // if (merged->u.rgb.blue) delete merged->u.rgb.blue;
+//   unsigned int dataSize = mono_one.GetDataSize();
   
-  // create type
-  merged->inputType 	= TriInp_RGB;
-  merged->nrows		= mono_one.GetRows();
-  merged->ncols		= mono_one.GetCols();
-  merged->rowinc	= mono_one.GetCols();
-  merged->u.rgb.red   	= new unsigned char[dataSize];
-  merged->u.rgb.green 	= new unsigned char[dataSize];
-  merged->u.rgb.blue  	= merged->u.rgb.green;
+//   // create type
+//   merged->inputType 	= TriInp_RGB;
+//   merged->nrows		= mono_one.GetRows();
+//   merged->ncols		= mono_one.GetCols();
+//   merged->rowinc	= mono_one.GetCols();
+//   merged->u.rgb.red   	= new unsigned char[dataSize];
+//   merged->u.rgb.green 	= new unsigned char[dataSize];
+//   merged->u.rgb.blue  	= merged->u.rgb.green;
 
-  // copy data over
-  std::copy(mono_one.GetData(), mono_one.GetData()+mono_one.GetDataSize(), (unsigned char*)merged->u.rgb.red);
-  std::copy(mono_two.GetData(), mono_two.GetData()+mono_two.GetDataSize(), (unsigned char*)merged->u.rgb.green);  
-}
+//   // copy data over
+//   std::copy(mono_one.GetData(), mono_one.GetData()+mono_one.GetDataSize(), (unsigned char*)merged->u.rgb.red);
+//   std::copy(mono_two.GetData(), mono_two.GetData()+mono_two.GetDataSize(), (unsigned char*)merged->u.rgb.green);  
+// }
 
 
 TriclopsInput nullTriclopsInput() {
