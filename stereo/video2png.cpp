@@ -72,9 +72,11 @@ void save2avi(string infile, string outfile, int startFrame=0, int endFrame = -1
 int main(int argc, char* argv[]) {
   vector<string> names(3);
   names[0] = "left"; names[1] = "center"; names[2] = "right";
-  string inprefix = "./recordings/2013-09-23_12:44_";
-  string outprefix = "./recordings_tmp/2013-09-23_12:44_";
-  int startFrame = 275, endFrame = -1;
+  //string inprefix = "./recordings/2013-09-23_12:44_";
+  //string outprefix = "./recordings_tmp/2013-09-23_12:44_";
+  string inprefix = "/scail/group/deeplearning/sail-deep-gpu/brodyh/recordings/2013-09-24_15:59/2013-09-24_15:59_";  
+  string outprefix = "/scr/brodyh/tmp/2013-09-24_15:59_";
+  int startFrame = 0, endFrame = -1;
   
   for (int i = 0; i < names.size(); i++)
     //save2pngs(prefix + names[i] + ".avi", "./images/", "_"+names[i]+".png");
