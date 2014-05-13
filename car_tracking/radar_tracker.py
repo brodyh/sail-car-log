@@ -220,7 +220,8 @@ def show_3D(annotations,rdr_map, args, save_video = False, with_options=False):
 		elif choice == 'x': break;
 		annotation = annotations[ind];	
 		ImgName =  annotation.filename();
-		ImgName = "/Users/Carrie/Desktop/radarData/all_extracted/"+'/'.join(ImgName.split('/')[-2:])
+		ex_dir = '/scail/group/deeplearning/driving_data/andriluka/IMAGES/driving_data_q50_data/all_extracted/'
+		ImgName = ex_dir +'/'.join(ImgName.split('/')[-2:])
 		print ImgName;
 		
 		radar_data = loadRDR(rdr_map[frame_num])[0]
@@ -420,9 +421,9 @@ if __name__ == "__main__":
 	
 	set_annotations_ids_using_radar(annotations, rdr_map, args);   
 	
-	save_filename = filename.split('.')[0] + "_new.al";
+	save_filename = filename.split('.')[0] + "-with-distance.al";
 	saveXML(save_filename, annotations);
 #	compute_statistics(annotations, rdr_map);
 	show_3D(annotations, rdr_map,args, True);
 	print "Writing new annotations into a file..."
-	saveXML(filename.split('.')[0] + "_with_distance.al", annotations);
+	saveXML(filename.split('.')[0] + "-with-distance.al", annotations);
