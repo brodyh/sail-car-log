@@ -581,7 +581,7 @@ if __name__ == "__main__":
 	print "Loading annotation file . . .";
 	annotations = parseXML(filename);
 	print len(annotations);
-	
+ 	
 	args = parse_args(sys.argv[2], sys.argv[3])
   	params = args['params']
    
@@ -593,7 +593,7 @@ if __name__ == "__main__":
 	for annotation in annotations:
 		for rect in annotation.rects:
 			rect.classID = int(rect.classID);
-	save_filename = filename.split('.')[0] + "_new.al";
+                        save_filename = filename.split('.')[0] + "_with_distance.al";
 	saveXML(save_filename, annotations);
 #	compute_statistics(annotations, rdr_map);
 #	show_3D(annotations, rdr_map,args, True, False, True);
