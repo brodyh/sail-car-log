@@ -26,6 +26,7 @@ set(CUDA_NVCC_FLAGS "-arch=sm_20")
 # add fastcpp config info to cache
 set(fastcpp_DIR "~/fastlab/share/fastcpp")
 find_package(fastcpp REQUIRED CONFIG)
+set(FASTCPP_LIB "~/fastlab/lib/libfastcpp.so")
 
 # MPI detection
 find_package(MPI)
@@ -80,6 +81,7 @@ set(lane_detector_LIBS ${lane_detector_LIBS} ${FASTCPP_LIBRARIES})
  add_message_files(
    FILES
    Delay.msg
+   LaneOutput.msg
 #   Message2.msg
  )
 
@@ -133,10 +135,12 @@ include_directories(
 
 add_executable(VideoProducer src/VideoProducer.cpp)
 target_link_libraries(VideoProducer ${lane_detector_LIBS} ${catkin_LIBRARIES})
-add_dependencies(VideoProducer lane_detection_gencpp)
 
-cuda_add_executable(LanePredictionNode src/LanePredictionNode.cpp src/LanePredictor.cu)
+cuda_add_executable(LanePredictionNode src/LanePredictionNode.cpp src/LanePredictor_honda.cu src/LanePredictor_Q50.cu)
 target_link_libraries(LanePredictionNode ${lane_detector_LIBS} ${catkin_LIBRARIES})
+
+add_executable(LaneSubscriber src/LaneSubscriber.cpp)
+target_link_libraries(LaneSubscriber ${catkin_LIBRARIES})
 
 ## Declare a cpp library
 # add_library(lane_detection
@@ -170,12 +174,14 @@ target_link_libraries(LanePredictionNode ${lane_detector_LIBS} ${catkin_LIBRARIE
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS lane_detection lane_detection_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
+install(TARGETS 
+   LanePredictionNode
+   VideoProducer
+   LaneSubscriber
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 ## Mark cpp header files for installation
 # install(DIRECTORY include/${PROJECT_NAME}/
 #   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
@@ -184,12 +190,8 @@ target_link_libraries(LanePredictionNode ${lane_detector_LIBS} ${catkin_LIBRARIE
 # )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
-
+install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(FILES ${FASTCPP_LIB} DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
 #############
 ## Testing ##
 #############

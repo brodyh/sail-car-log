@@ -8,6 +8,7 @@
 *~
 *.npz
 *.h5
+*.ply
 bin
 build
 cameralogger/build
@@ -16,4 +17,7 @@ ros_drivers/src/q50_can/src/
 ros_drivers/install
 ros_drivers/devel
 ros_drivers/src/CMakeLists.txt
+pass.txt
+*.pcap
+api_key.txt
 TAGS

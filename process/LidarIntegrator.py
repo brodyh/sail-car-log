@@ -8,7 +8,6 @@ from Q50_config import *
 from ArgParser import *
 import sys, os
 from GPSReader import *
-from GPSReprojection import *
 from GPSTransforms import *
 from VideoReader import *
 from LidarTransforms import *
@@ -19,6 +18,7 @@ from ColorMap import *
 import vtk
 import copy
 import cv2
+import math
 
 
 global actors
@@ -59,8 +59,8 @@ renderWindow = vtk.vtkRenderWindow()
 #step = 2
 
 start_fn = 0 # offset in frame numbers to start exporting data
-num_fn = 100 # number of frames to export. this is changed if --full is enabled
-step = 10 # step between frames
+num_fn = 60 # number of frames to export. this is changed if --full is enabled
+step = 5 # step between frames
 
 color_mode = 'INTENSITY'
 
@@ -94,6 +94,55 @@ def stepVideo(video_reader, step):
         (success, I) = video_reader.getNextFrame()
     return success
 
+
+def interp_transforms(T1, T2, alpha):
+    assert alpha <= 1
+    T_avg = alpha * T1 + (1 - alpha) * T2
+    # Need to orthonormalize transform
+    R = T_avg[0:3, 0:3]
+    R = np.linalg.qr(R, mode='complete')[0]
+    T_avg[0:3, 0:3] = R
+    return T_avg
+
+
+def interp_transforms_backward(imu_transforms, ind):
+    assert ind < 0, 'No need to call interp_transforms_backward'
+    T_interp = imu_transforms[0, :, :] -\
+        (imu_transforms[-1 * ind, :, :] - imu_transforms[0, :, :])
+    R = T_interp[0:3, 0:3]
+    R = np.linalg.qr(R, mode='complete')[0]
+    T_interp[0:3, 0:3] = R
+    return T_interp
+
+
+def transform_points_in_sweep(pts, times, fnum, imu_transforms):
+    for time in set(times):
+        mask = times == time
+
+        # FIXME PARAM
+        offset = (time / float(1e6)) / 0.02
+        offset = min(5, offset)
+
+        ind1 = int(fnum - math.ceil(offset))
+        ind2 = int(fnum - math.floor(offset))
+
+        # FIXME Hack to interpolate before 0
+        #ind1, ind2 = max(ind1, 0), max(ind2, 0)
+        if ind1 < 0:
+            T1 = interp_transforms_backward(imu_transforms, ind1)
+        else:
+            T1 = imu_transforms[ind1, :, :]
+        if ind2 < 0:
+            T2 = interp_transforms_backward(imu_transforms, ind2)
+        else:
+            T2 = imu_transforms[ind2, :, :]
+
+        transform = interp_transforms(T1, T2, offset / 5.0)
+
+        # transform data into imu_0 frame
+        pts[:, mask] = np.dot(transform, pts[:, mask])
+
+
 def integrateClouds(ldr_map, IMUTransforms, renderer, offset, num_steps, step, calibrationParameters):
     start = offset
     end = offset + num_steps*step
@@ -117,12 +166,13 @@ def integrateClouds(ldr_map, IMUTransforms, renderer, offset, num_steps, step, c
         dist = np.sqrt(np.sum( data[:, 0:3] ** 2, axis = 1))
 
         # check out the commented out section below to figure out how this is filtering.
-        data_filter_mask = (dist > 3)                  & \
-                           (data[:,3] > 40)            & \
-                           (np.abs(data[:,1]) < 2.2)   & \
-                           (np.abs(data[:,1]) > 1.2)   & \
-                           (data[:,2] < -1.8)          & \
-                           (data[:,2] > -2.5)         
+        data_filter_mask = (dist > 3)                 & \
+                           (data[:,3] > 30)            
+                           #&\
+                           #(np.abs(data[:,1]) < 2.2)   & \
+                           #(np.abs(data[:,1]) > 1.2)   & \
+                           #(data[:,2] < -1.8)          & \
+                           #(data[:,2] > -2.5)        
         data = data[data_filter_mask, :]
         """
         # filter out on intensity
@@ -185,8 +235,13 @@ def integrateClouds(ldr_map, IMUTransforms, renderer, offset, num_steps, step, c
         pts = np.vstack((pts,np.ones((1,pts.shape[1]))))
         T_from_l_to_i = calibrationParameters['lidar']['T_from_l_to_i']
         pts = np.dot(T_from_l_to_i, pts)
-        # transform data into imu_0 frame
-        pts = np.dot(IMUTransforms[fnum,:,:], pts);
+
+        # Microseconds till end of the sweep
+        times = data[:, 5]
+        transform_points_in_sweep(pts, times, fnum, imu_transforms)
+
+        ## transform data into imu_0 frame
+        #pts = np.dot(IMUTransforms[fnum,:,:], pts);
         pts = pts.transpose()
 
         # for exporting purposes
