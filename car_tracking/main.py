@@ -29,22 +29,22 @@ def isTheSame(_rect1, _rect2):
    else:
 	return False
 
-if __name__ == "__main__":
 
+def main(args=None):
     min_remove_iou = 0.65;
 
     parser = OptionParser();
 
     parser.add_option('-a', '--annolist', dest='annolist_name', type="string", help='annotation list (*.al or *.idl) used to inialize the tracking', default=None)
     parser.add_option('-o', '--output_dir', dest='output_dir', type="string", help='directory for saving tracking results', default='./')
-    parser.add_option('-f', '--first', dest='firstidx', type="int", help='first image to start tracking (0-based)', default=0)
+    parser.add_option('-f', '--first', dest='firstidx', type="int", help='first image to start tracking (0-based)', default=0) 
     parser.add_option('-n', '--numimgs', dest='numimgs', type="int", help='number of images to process in the original image list', default=-1)
-    parser.add_option('--track_frames', dest='track_frames', type="int", help='number of frames to track', default=50)
+    parser.add_option('--track_frames', dest='track_frames', type="int", help='number of frames to track', default=20)
     
-    (opts, args) = parser.parse_args()
+    (opts, args) = parser.parse_args(args)
     
     annolist_basedir = os.path.dirname(opts.annolist_name)
-    annolist = parseXML(opts.annolist_name);
+    annolist = parse(opts.annolist_name);
 
     if opts.numimgs == -1:
         numimgs = len(annolist);
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 				if r_ind > midIdx: r_main.classID = r_more.classID;
                                 found_similar = True;
 				if(r_ind < len(annolist_track_fwd)-2 and (r_main.x1 < 10 or r_main.x2 > I.shape[1]-10)):
-					same_box_fouund = False;
+					same_box_found = False;
 					for next_frame_rect in annolist_track_main[r_ind+1].rects:
 						if next_frame_rect.classID == r_main.classID:
 							same_box_found = True;
@@ -174,10 +174,12 @@ if __name__ == "__main__":
         # save results ones in a while 
         if idx % 10 == 0:
             print "saving " + save_filename_partiall;
-            saveXML(save_filename_partiall, annolist_track);
+            save(save_filename_partiall, annolist_track);
 
     print "saving " + save_filename;
-    saveXML(save_filename, annolist_track);
+    save(save_filename, annolist_track);
     
     
             
+if __name__ == "__main__":
+   main()

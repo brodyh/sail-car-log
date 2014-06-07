@@ -64,8 +64,8 @@ def comp_rect_hist(I, _rect, normtype=1):
 
     roi_img = I[rect.y1:rect.y2, rect.x1:rect.x2, :];
 
-    print "roi width: ", roi_img.shape[0], ", roi height: ", roi_img.shape[1];
-    print rect.y1, rect.y2, rect.x1, rect.x2
+    #print "roi width: ", roi_img.shape[0], ", roi height: ", roi_img.shape[1];
+    #print rect.y1, rect.y2, rect.x1, rect.x2
 
     assert(roi_img.shape[0] > 0 and roi_img.shape[1] > 0);
 
@@ -471,7 +471,7 @@ def track_frame(a, stop_imgname, trackMaxFrames, frame_inc):
 
             # track to next image
             nextImageName = inc_image_name(curImageName, frame_inc);
-            print "\tnextImageName: " + nextImageName
+            #print "\tnextImageName: " + nextImageName
 
             if os.path.isfile(nextImageName):
 
@@ -508,7 +508,7 @@ def track_frame(a, stop_imgname, trackMaxFrames, frame_inc):
                             bf = cv2.BFMatcher();
                             cur_num_matches = len(match_and_ratio_test(tracks_init_des[abs(rect.classID)], des2));
                         
-                        print "\ttrack %d, init_num_matches %d, cur_num_matches: %d" % (rect.classID, tracks_init_num_matches[abs(rect.classID)], cur_num_matches)
+                        #print "\ttrack %d, init_num_matches %d, cur_num_matches: %d" % (rect.classID, tracks_init_num_matches[abs(rect.classID)], cur_num_matches)
 
 			verification_ok = True;
 
@@ -518,7 +518,7 @@ def track_frame(a, stop_imgname, trackMaxFrames, frame_inc):
 			#cur_color_dist = cv2.compareHist(tracks_init_colorhist[rect.classID], hist_cur, cv.CV_COMP_CHISQR)
 			cur_color_dist = dist_chi2(tracks_init_colorhist[abs(rect.classID)], hist_cur);
 
-			print "\n\t cur_color_dist: " + str(cur_color_dist);
+			# print "\n\t cur_color_dist: " + str(cur_color_dist);
 
 			if  cur_color_dist > max_color_dist and new_rect.overlap_pascal(rect) < max_move_thr:
                             verification_ok = False;
@@ -553,8 +553,8 @@ def track_frame(a, stop_imgname, trackMaxFrames, frame_inc):
                     else:
                         num_missed_tracks += 1;
 
-                print "\tnum_active_tracks: %d, num_missed_tracks: %d, num_skip_small: %d, num_init_matching_failed_sift: %d, num_init_matching_failed_color: %d, num_ignore_border: %d\n" \
-                    % (len(new_tracked_rects), num_missed_tracks, num_skip_small, num_init_matching_failed_sift, num_init_matching_failed_color, num_ignore_border)
+#                print "\tnum_active_tracks: %d, num_missed_tracks: %d, num_skip_small: %d, num_init_matching_failed_sift: %d, num_init_matching_failed_color: %d, num_ignore_border: %d\n" \
+#                    % (len(new_tracked_rects), num_missed_tracks, num_skip_small, num_init_matching_failed_sift, num_init_matching_failed_color, num_ignore_border)
 
                 framesTracked += 1;
             
