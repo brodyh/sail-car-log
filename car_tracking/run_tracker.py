@@ -41,9 +41,10 @@ def create_tracking_files():
             img.imageName = os.path.basename(img.imageName)
         al.save(tracked_file, imgs)
 
-    for f in files:
-        tracked_file = f.replace('.pal','-track.pal')
-        shutil.move(os.path.basename(tracked_file), tracked_file)
+    # # move files to the extraced dir
+    # for f in files:
+    #     tracked_file = f.replace('.pal','-track.pal')
+    #     shutil.move(os.path.basename(tracked_file), tracked_file)
         
 def get_depth():
     files = glob.glob('*-track.al')

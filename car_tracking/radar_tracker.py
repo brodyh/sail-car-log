@@ -375,7 +375,7 @@ def show_3D(annotations,rdr_map, args, save_video = False, with_options=False, w
         annotation = annotations[ind];
         ImgName =  annotation.filename();
         #ImgName = "/Users/Carrie/Desktop/radarData/all_extracted/"+'/'.join(ImgName.split('/')[-2:])
-        ImgName = "/scail/group/deeplearning/driving_data/andriluka/IMAGES/driving_data_q50_data/all_extracted/"+\        
+        ImgName = "/scail/group/deeplearning/driving_data/andriluka/IMAGES/driving_data_q50_data/all_extracted/" + \
             '/'.join(ImgName.split('/')[-2:])
         print ImgName;
 
