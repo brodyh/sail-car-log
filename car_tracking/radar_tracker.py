@@ -21,8 +21,8 @@ from ProjectRadarOnVideo import *
 from collections import defaultdict
 from collections import Counter
 
-def does_overlap(_rect, annotation): 
-   Thr = .7; 
+def does_overlap(_rect, annotation, thr): 
+   Thr = thr; 
    rect1 = copy.deepcopy(_rect);
    for _rect2 in annotation.rects:
 	   rect2 = copy.deepcopy(_rect2); 
@@ -216,6 +216,72 @@ def set_annotations_ids_using_radar(annotations, rdr_map, args): # rect.classID:
 							rect.score = radar_data[cn_idx][0];
 		i += block_size;
 	return annotations;
+
+def find_missed_regions(annotations, rdr, args):
+	img_shape = [1280,960];
+	
+	anno_size = len(annotations);
+	rdr_map_size = len(rdr_map);
+	ind = 0;
+	search_area = 10;
+	i = 0;
+	while(True):
+		frame_num = ind * 10;
+		if(ind >= anno_size or frame_num >=len(rdr_map)):
+			break;
+		annotation = annotations[ind];
+		radar_data = loadRDR(rdr_map[frame_num])[0];
+		if radar_data.shape[0] > 0:
+		    # Remove points that have a low radar cross-section
+		    mask = (radar_data[:, 5] > 0)
+		    # Remove points that are moving too fast (fixed objects)
+		    mask &= (radar_data[:, 6] > -20)
+		    radar_data = radar_data[mask]
+		
+		ImgName =  annotation.filename();
+                ImgName = "/Users/Carrie/Desktop/radarData/all_extracted/"+'/'.join(ImgName.split('/')[-2:])
+               	tempImg1 = cv2.imread(ImgName);
+                         
+		if radar_data.shape[0] > 0:
+			radar_array = np.array(radar_data);
+			radar_ids = radar_data[:,7];
+			anno_ids = [rect.classID for rect in annotation.rects];
+
+     		        right_pts = np.array(radar_data)
+		        right_pts[:,1] += radar_data[:,4] / 2.
+
+		        left_pts = np.array(radar_data)
+		        left_pts[:,1] -= radar_data[:,4] / 2.
+
+		        left_proj = projectPoints(left_pts, args)
+		        right_proj = projectPoints(right_pts, args)
+
+			for r, rId in enumerate(radar_ids):
+				if rId not in anno_ids:
+					radar_info = np.array([radar_data[r, :]]);
+					radar_proj = projectPoints(radar_info, args)
+					cn_rdr = radar_proj[:, 8:10].astype(np.int32);
+					cn_rdr = cn_rdr[0];
+					w = left_proj[r, 8] -  right_proj[r,8];
+					x1 = max(0,cn_rdr[0] - int(w));
+					x2 = min(img_shape[0],cn_rdr[0] + int(w));
+					y1 = max(0,cn_rdr[1] - int(1.5*w));
+					y2 = min(img_shape[1],cn_rdr[1] + int(w));
+					print w, x1, x2, y1, y2
+					if w > 20:
+						new_rect = AnnoRect(int(x1), int(y1), int(x2), int(y2));
+						if not does_overlap(new_rect, annotation, .5):
+							cv.SaveImage('/Users/Carrie/Desktop/new_images/pic_'+str(i) + '.jpg', cv.fromarray(tempImg1[y1:y2,x1:x2]));
+							tempImgg1 = cv2.rectangle(tempImg1, (int(x1),int(y1)), (int(x2), int(y2)), (0,255,0),2);
+							i += 1;
+			
+		for rect in annotation.rects:
+                        tempImgg1 = cv2.rectangle(tempImg1, (int(rect.x1),int(rect.y1)), (int(rect.x2), int(rect.y2)), (0,0,255),2);
+		cv2.imshow('img1',tempImg1);
+		cv2.waitKey(0);	
+
+		ind += 1;
+	
 def fill_gaps(annotations, rdr_map):
 	anno_size = len(annotations);
 	rdr_map_size = len(rdr_map);
@@ -280,7 +346,7 @@ def fill_gaps(annotations, rdr_map):
 						new_rect = AnnoRect(int(n_x1), int(n_y1), int(n_x2), int(n_y2));
 						new_rect.classID = int(rId);
 						new_rect.score = 0;
-						if not does_overlap(new_rect, annotations[ind]):
+						if not does_overlap(new_rect, annotations[ind], 0.7):
 							annotations[ind].rects.append(new_rect)
 							print('Added');
 					elif flagb and jb > 0 and False:
@@ -310,7 +376,7 @@ def fill_gaps(annotations, rdr_map):
 							new_rect = AnnoRect(int(n_x1), int(n_y1), int(n_x2), int(n_y2));
 							new_rect.classID = rId;
 							new_rect.score = 0;
-							if does_overlap(new_rect, annotations[ind]):
+							if does_overlap(new_rect, annotations[ind], 0.7):
 								annotations[ind].rects.append(new_rect)
 								print('Added');
 
@@ -340,7 +406,7 @@ def fill_gaps(annotations, rdr_map):
 							new_rect = AnnoRect(int(n_x1), int(n_y1), int(n_x2), int(n_y2));
 							new_rect.classID = rId;
 	#						new_rect.score =
-							if does_overlap(new_rect, annotations[ind]):
+							if does_overlap(new_rect, annotations[ind], 0.7):
 								annotations[ind].rects.append(new_rect)
 								print('Added');
 		
@@ -595,6 +661,7 @@ if __name__ == "__main__":
 	save_filename = filename.split('.')[0] + "_new.al";
 	saveXML(save_filename, annotations);
 #	compute_statistics(annotations, rdr_map);
-#	show_3D(annotations, rdr_map,args, True, False, True);
+#	find_missed_regions(annotations, rdr_map, args)
+	show_3D(annotations, rdr_map,args, True, False, True);
 #	print "Writing new annotations into a file..."
 #	saveXML(filename.split('.')[1] + "_with_distance.al", annotations);
