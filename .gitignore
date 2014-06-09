@@ -21,3 +21,5 @@ pass.txt
 *.pcap
 api_key.txt
 TAGS
+*.pal
+*.al
