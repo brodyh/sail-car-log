@@ -662,21 +662,27 @@ def copy_from_tracked(annotations_turked, annotations_tracked):
             ind_tracked += 1
         annotations_turked[ind_turked] = annotations_tracked[ind_tracked]
 
+def absolute_path_to_relative_path(annotations):
+    for img in annotations:
+        if img.imageName[0] == '/':
+            img.imageName = '/'.join(img.imageName.split('/')[-2:])    
+
 def main(filename=None):
     if filename is None:
         if (len(sys.argv) < 2):
-            print "python radar_tracker.py <.al file>"
+            print "python radar_tracker.py <.pal file>"
             sys.exit();
         filename = sys.argv[1]
 
-    assert filename.find('-track') != -1
+    use_turked = filename.find('-track') != -1
     print "Loading annotation file . . .";
     # annotations_tracked = pickle.load(open('annotations.pkl'))    
-    annotations_tracked = parseXML(filename);
-    annotations_turked = parseXML(filename.replace('-track',''))
+    annotations_tracked = parse(filename);
+    absolute_path_to_relative_path(annotations_tracked)
 
-    copy_from_turked(annotations_turked, annotations_tracked)
-
+    if use_turked:
+        annotations_turked = parse(filename.replace('-track',''))
+        copy_from_turked(annotations_turked, annotations_tracked)
 
     print len(annotations_tracked)
 
@@ -697,19 +703,20 @@ def main(filename=None):
         for rect in annotation.rects:
             rect.classID = int(rect.classID);
 
-    copy_from_tracked(annotations_turked, annotations_tracked)
-
+    if use_turked:
+        copy_from_tracked(annotations_turked, annotations_tracked)
     
-    save_filename = filename.split('.')[0] + "-with-depth.al";
-    saveXML(save_filename, annotations_tracked);
+    save_filename = filename.split('.')[0] + "-with-depth.pal";
+    save(save_filename, annotations_tracked);
 
-    save_filename = filename.split('.')[0].replace('-track','') + "-with-depth.al";
-    saveXML(save_filename, annotations_turked);    
+    if use_turked:
+        save_filename = filename.split('.')[0].replace('-track','') + "-with-depth.pal";
+        save(save_filename, annotations_turked);    
     
     # compute_statistics(annotations, rdr_map);
     #show_3D(annotations_turked, rdr_map,args, True, False, True);
     # print "Writing new annotations into a file..."
-    # saveXML(filename.split('.')[1] + "_with_distance.al", annotations);
+    # save(filename.split('.')[1] + "_with_distance.pal", annotations);
 
 if __name__ == "__main__":
     main()
