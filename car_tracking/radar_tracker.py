@@ -123,9 +123,9 @@ def set_annotations_ids_using_radar(annotations, rdr_map, args): # rect.classID:
             # print "============" + str(len(radar_data)) + ", " +  str(len(radar_data[0]))
             if radar_data.shape[0] > 0:
                 # Remove points that have a low radar cross-section
-                mask = (radar_data[:, 5] > 0)
+                # mask = (radar_data[:, 5] > 0)
                 # Remove points that are moving too fast (fixed objects)
-                mask &= (radar_data[:, 6] > -20)
+                mask = (radar_data[:, 6] > -20)
                 radar_data = radar_data[mask]
 
             ctr_pts = np.array(radar_data);
@@ -165,10 +165,9 @@ def set_annotations_ids_using_radar(annotations, rdr_map, args): # rect.classID:
             radar_data = loadRDR(rdr_map[frame_num])[0]
             if radar_data.shape[0] > 0:
                 # Remove points that have a low radar cross-section
-                mask = (radar_data[:, 5] > 0)
+                # mask = (radar_data[:, 5] > 0)
                 # Remove points that are moving too fast (fixed objects)
-
-                mask &= (radar_data[:, 6] > -20)
+                mask = (radar_data[:, 6] > -20)
                 radar_data = radar_data[mask]
 
             ctr_pts = np.array(radar_data);
@@ -191,7 +190,6 @@ def set_annotations_ids_using_radar(annotations, rdr_map, args): # rect.classID:
                                 if cn_idx > len(cn_rdr)-1:
                                     break;
                             if flag:
-
                                 r_pnt = [int(annotation.rects[r].centerX()), int(annotation.rects[r].bottom())]
                                 s_pnt = [int(annotation.rects[s].centerX()), int(annotation.rects[s].bottom())]
                                 dis_r = (cn_rdr[cn_idx,1]-r_pnt[0])**2 + (cn_rdr[cn_idx,2]-r_pnt[1])**2;
@@ -235,9 +233,9 @@ def fill_gaps(annotations, rdr_map):
         radar_data = loadRDR(rdr_map[frame_num])[0];
         if radar_data.shape[0] > 0:
             # Remove points that have a low radar cross-section
-            mask = (radar_data[:, 5] > 0)
+            # mask = (radar_data[:, 5] > 0)
             # Remove points that are moving too fast (fixed objects)
-            mask &= (radar_data[:, 6] > -20)
+            mask = (radar_data[:, 6] > -20)
             radar_data = radar_data[mask]
         if radar_data.shape[0] > 0:
             radar_array = np.array(radar_data);
@@ -364,7 +362,7 @@ def show_3D(annotations,rdr_map, args, save_video = False, with_options=False, w
     while True:
         frame_num = ind * 10
         if(ind >= anno_size or frame_num >=len(rdr_map)):
-            break;        
+            break;
         if (with_options):
             choice = raw_input("> ");
         else:
@@ -387,9 +385,9 @@ def show_3D(annotations,rdr_map, args, save_video = False, with_options=False, w
 
         if radar_data.shape[0] > 0:
             # Remove points that have a low radar cross-section
-            mask = (radar_data[:, 5] > 0)
+            # mask = (radar_data[:, 5] > 0)
             # Remove points that are moving too fast (fixed objects)
-            mask &= (radar_data[:, 6] > -20)
+            mask = (radar_data[:, 6] > -20)
             radar_data = radar_data[mask]
 
         if radar_data.shape[0] > 0:
@@ -509,11 +507,11 @@ def show_3D(annotations,rdr_map, args, save_video = False, with_options=False, w
                     cv2.line(I, tuple(bl), tuple(br), (255,0,0))
                     cv2.line(I, tuple(br), tuple(fr), (255,255,0))
         ind += 1;
-        cv2.imshow('img1',I);
+        #cv2.imshow('img1',I);
         if(save_video):
             writer.write(I);
 
-        cv2.waitKey(20)
+        #cv2.waitKey(20)
 def compute_statistics(annotations, rdr_map):
     idx = 0;
     anno_size = len(annotations);
@@ -593,29 +591,12 @@ def load_all_radar_info(annotations):
         map_file = image_name_to_map_file(ann.imageName)
         if map_file not in maps_set:
             maps_set.add(map_file)
-            maps_list.append(map_file)            
+            maps_list.append(map_file)
             radar += loadRDRCamMap(map_file)
         else:
             assert map_file == maps_list[-1]
 
     return radar
-
-    # all_radar = []
-    # maps_set = set()
-    # maps_list = []
-    # radar_per_image = 10
-
-    # for ann in annotations:
-    #     map_file = image_name_to_map_file(ann.imageName)
-    #     if map_file not in maps_set:
-    #         maps_set.add(map_file)
-    #         maps_list.append(map_file)            
-    #         radar = loadRDRCamMap(map_file)
-
-    #     frame_num = get_frame_number(ann.imageName) * radar_per_image
-    #     all_radar += radar[frame_num:frame_num+radar_per_image]
-
-    # return all_radar
 
 def image_name_to_map_file(image_name):
     q50_dir = '/scail/group/deeplearning/driving_data/q50_data'
@@ -665,7 +646,7 @@ def copy_from_tracked(annotations_turked, annotations_tracked):
 def absolute_path_to_relative_path(annotations):
     for img in annotations:
         if img.imageName[0] == '/':
-            img.imageName = '/'.join(img.imageName.split('/')[-2:])    
+            img.imageName = '/'.join(img.imageName.split('/')[-2:])
 
 def main(filename=None):
     if filename is None:
@@ -674,9 +655,9 @@ def main(filename=None):
             sys.exit();
         filename = sys.argv[1]
 
-    use_turked = filename.find('-track') != -1
+    use_turked = filename.find('-track') != -1 \
+        and os.path.exists(filename.replace('-track',''))
     print "Loading annotation file . . .";
-    # annotations_tracked = pickle.load(open('annotations.pkl'))    
     annotations_tracked = parse(filename);
     absolute_path_to_relative_path(annotations_tracked)
 
@@ -705,16 +686,16 @@ def main(filename=None):
 
     if use_turked:
         copy_from_tracked(annotations_turked, annotations_tracked)
-    
+
     save_filename = filename.split('.')[0] + "-with-depth.pal";
     save(save_filename, annotations_tracked);
 
     if use_turked:
         save_filename = filename.split('.')[0].replace('-track','') + "-with-depth.pal";
-        save(save_filename, annotations_turked);    
-    
-    # compute_statistics(annotations, rdr_map);
-    #show_3D(annotations_turked, rdr_map,args, True, False, True);
+        save(save_filename, annotations_turked);
+
+    # compute_statistics(annotations_turked, rdr_map);
+    show_3D(annotations_tracked, rdr_map, args, True, False, True);
     # print "Writing new annotations into a file..."
     # save(filename.split('.')[1] + "_with_distance.pal", annotations);
 

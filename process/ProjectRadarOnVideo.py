@@ -38,7 +38,7 @@ def projectPoints(radar_data, args):
     pix = pix.astype(np.int32)
 
     # Filter the points to remove points that exist outside the video frame
-    # This is not a problem for the radar because the cameras see everything 
+    # This is not a problem for the radar because the cameras see everything
     # the radar does
     # dist_sqr = np.sum(pts_wrt_cam[0:3, :] ** 2, axis = 0)
     # mask = (pix[0,:] > 0) & (pix[1,:] > 0) & \
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     video_reader = VideoReader(args['video'])
     rdr_map = loadRDRCamMap(args['map'])
-    
+
     writer = cv2.VideoWriter('radar_test.avi', cv.CV_FOURCC('X','V', 'I', 'D'),
                     50.0, (1280,960) )
 
@@ -68,16 +68,16 @@ if __name__ == '__main__':
 
         if radar_data.shape[0] > 0:
             # Remove points that have a low radar cross-section
-            mask = (radar_data[:, 5] > 5)
+            # mask = (radar_data[:, 5] > 5)
             # Remove points that are moving too fast (fixed objects)
-            mask &= (radar_data[:, 6] > -20)
+            mask = (radar_data[:, 6] > -20)
             radar_data = radar_data[mask]
 
         if radar_data.shape[0] > 0:
             front_right_pts = np.array(radar_data)
             front_right_pts[:,0] += radar_data[:,3]
             front_right_pts[:,1] += radar_data[:,4] / 2.
-            
+
             front_left_pts = np.array(radar_data)
             front_left_pts[:,0] += radar_data[:,3]
             front_left_pts[:,1] -= radar_data[:,4] / 2.
@@ -111,7 +111,7 @@ if __name__ == '__main__':
                 id = int(radar_data[j, 7])
                 s = "%d: %d, %0.2f, %0.2f" % (id, rcs, dist, spd)
                 cv2.putText(I, s, tuple(fr),
-                    cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,255), thickness=1)
+                            cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,255), thickness=1)
 
         cv2.imshow('display', I)
         # writer.write(I)
