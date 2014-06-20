@@ -107,7 +107,7 @@ def set_annotations_ids_using_radar(annotations, rdr_map, args): # rect.classID:
 	rdr_len = len(rdr_map);
 	sc = 10; # scaling factor between tracker and radar indices
 	i = 0;
-	while (i < anno_len and i < rdr_map):
+	while (i < anno_len and i < rdr_len):
 		id_info = [[] for r in range(max_id)];
 		for j in range(block_size):
 			idx = i + j;
@@ -214,7 +214,30 @@ def set_annotations_ids_using_radar(annotations, rdr_map, args): # rect.classID:
 								break;
 						if flag:
 							rect.score = radar_data[cn_idx][0];
+
+			# Checking for non-matched radar points
+			if(len(ctr_pts)>0):
+				center_proj = projectPoints(ctr_pts, args)
+				cn_rdr = center_proj[:, 7:10].astype(np.int32);
+				cn_trk = np.array([[rect.classID, int(rect.centerX()), int(rect.bottom()), int(rect.width()), int(rect.height()), idxx] 
+						for idxx, rect in enumerate(annotation.rects) if rect.width() > 40]);
+			
+				for r in range(len(cn_rdr)):
+					if cn_rdr[r,0] not in cn_trk[:,0]:
+						nearest_idx = 0;
+						dis = (cn_rdr[r,1]-cn_trk[0,1])**2 + (cn_rdr[r,2]-cn_trk[0,2])**2;
+						for s in range(1,len(cn_trk)):
+							dis_new = (cn_rdr[r,1]-cn_trk[s,1])**2 + (cn_rdr[r,2]-cn_trk[s,2])**2;
+							if dis_new < dis:
+								dis = dis_new;
+								nearest_idx = s;
+						s = nearest_idx;
+						u_thr = .5 * (cn_trk[s,3]**2 + cn_trk[s,4]**2);
+						if cn_trk[s,0] < 0 and dis < u_thr:
+							annotation.rects[cn_trk[s,5]].classID = cn_rdr[r,0];
+
 		i += block_size;
+	
 	return annotations;
 
 def find_missed_regions(annotations, rdr, args):
@@ -662,6 +685,6 @@ if __name__ == "__main__":
 	saveXML(save_filename, annotations);
 #	compute_statistics(annotations, rdr_map);
 #	find_missed_regions(annotations, rdr_map, args)
-	show_3D(annotations, rdr_map,args, True, False, True);
+	show_3D(annotations, rdr_map,args, True, True, True);
 #	print "Writing new annotations into a file..."
 #	saveXML(filename.split('.')[1] + "_with_distance.al", annotations);
