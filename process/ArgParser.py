@@ -8,19 +8,18 @@ def parse_args(folder, video_file):
        corresponding to file names.
     """
 
-    basename = folder + '/' + video_file[:-5]
+    basename = video_file[:-5]
+    fullname = folder + '/' + basename
 
-    map_file = basename + '.map'
-    lidar_folder = basename + '_frames/'
-    radar_folder = basename + '_rdr/'
-    gps_file = basename + '_gps.out'
-    
-    if video_file[-5] == '1':
-        opposite_video = '2'
-    else:
-        opposite_video = '1'
+    map_file = fullname + '.map'
+    lidar_folder = fullname + '_frames/'
+    radar_folder = fullname + '_rdr/'
+    gps_file = fullname + '_gps.out'
+    gps_mark1_file = fullname + '_gpsmark1.out'
+    gps_mark2_file = fullname + '_gpsmark2.out'
+   
+    video_file_num = video_file[-5]
 
-    opposite_video_file = basename + opposite_video + '.avi'
     video_file = folder + '/' + video_file
     param_file = folder + '/params.ini'
     params = open(param_file, 'r').readline().rstrip()
@@ -29,8 +28,11 @@ def parse_args(folder, video_file):
             'frames': lidar_folder,
             'radar': radar_folder,
             'gps': gps_file,
+            'gps_mark1': gps_mark1_file,
+            'gps_mark2': gps_mark2_file,
             'video': video_file,
-            'opposite_video': opposite_video_file,
+            'fullname': fullname,
+            'basename': basename,
             'cam_num': int(video_file[-5]),
             'params': LoadParameters(params)}
 
