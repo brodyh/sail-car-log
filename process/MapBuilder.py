@@ -17,9 +17,9 @@ import cv2
 import math
 
 
-class MapBuilder:
+class MapBuilder(object):
     def __init__(self, args, start_time, end_time, step_time, scan_window):
-        """ 
+        """
         start_time: seconds into the GPS Mark 1 log
         end_time: seconds into the GPS Mark 1 log
         step_time: seconds between adding points from scans
@@ -41,6 +41,8 @@ class MapBuilder:
         # grab the initial time off the gps log and compute start and end times
         self.start_time = self.gps_times_mark1[0] + start_time * 1e6
         self.end_time = self.gps_times_mark1[0] + end_time * 1e6
+        if self.end_time > self.gps_times_mark1[-1]:
+            self.end_time = self.gps_times_mark1[-1]
         self.step_time = step_time
         self.scan_window = scan_window
 
@@ -48,9 +50,10 @@ class MapBuilder:
         self.all_t = []
 
     def buildMap(self, filters=None):
-        """ 
-        Creates a map with a set of filters 
+        """
+        Creates a map with a set of filters
         filters: A list of filters.
+            'ground': Leaves the ground points
             'lanes': Filters out the lane markings
             'forward': Only takes the top half of the scan. This ensures points
                        appear in chronolgical order
@@ -60,9 +63,8 @@ class MapBuilder:
         self.all_t = []
 
         current_time = self.start_time
-        while current_time < self.end_time:
-
-            print (self.end_time - current_time) / 1e6
+        print (self.end_time - current_time) / 1e6
+        while current_time + self.scan_window < self.end_time:
             # load points w.r.t lidar at current time
             data, t_data = self.lidar_loader.loadLDRWindow(current_time,
                                                            self.scan_window)
@@ -70,22 +72,25 @@ class MapBuilder:
                 current_time += self.step_time * 1e6
                 continue
 
-            # Always remove low intensity points
-            data_filter_mask = data[:, 3] > 30
-
             if filters != None:
+                if 'ground' in filters:
+                    filter_mask = data[:, 3] < 10
+                else:
+                    filter_mask = data[:, 3] > 30
                 if 'lanes' in filters:
-                    data_filter_mask &=  (data[:,3] > 30) & (data[:,2] < -1.9) & \
-                                         (data[:,2] >-2.1) & (data[:,1] < 3) & \
-                                         (data [:,1] > -30) & (data[:,3] < 200)
+                    filter_mask &=  (data[:,1] < 3) & (data [:,1] > -3) &\
+                                    (data[:,2] < -1.9) & (data[:,2] > -2.1)
                 if 'forward' in filters:
-                    data_filter_mask &= (data[:, 0] > 0)
+                    filter_mask &= (data[:, 0] > 0)
+                if 'no-trees' in filters:
+                    filter_mask &= (data[:,1] < 30) & (data [:,1] > -30) &\
+                                   (data[:,2] < -1) & (data[:,2] > -3)
                 if 'flat' in filters:
                     data[:, 0] = 0
 
-            data = data[data_filter_mask, :]
-            t_data = t_data[data_filter_mask]
-        
+            data = data[filter_mask, :]
+            t_data = t_data[filter_mask]
+
             # put in imu_t frame
             pts = data[:, 0:3].transpose()
             pts = np.vstack((pts, np.ones((1, pts.shape[1]))))
@@ -103,6 +108,8 @@ class MapBuilder:
 
             current_time += self.step_time * 1e6
 
+        print (self.end_time - current_time) / 1e6
+
 
 
     def exportData(self, file_name):
@@ -118,6 +125,6 @@ class MapBuilder:
 
 if __name__ == '__main__':
     args = parse_args(sys.argv[1], sys.argv[2])
-    mb = MapBuilder(args, 1, 30, 0.5, 0.1)
-    mb.buildMap()
+    mb = MapBuilder(args, 1, 600, 0.5, 0.1)
+    mb.buildMap(['no-trees'])
     mb.exportData(sys.argv[3])

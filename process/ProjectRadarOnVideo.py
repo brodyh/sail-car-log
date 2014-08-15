@@ -30,7 +30,7 @@ def projectPoints(radar_data, args):
     pts_wrt_cam = pts + cam['displacement_from_l_to_c_in_lidar_frame']
     pts_wrt_cam = np.dot(R_to_c_from_l(cam), pts_wrt_cam.transpose())
 
-    (pix, J)  = cv2.projectPoints(pts_wrt_cam.transpose(),
+    (pix, J) = cv2.projectPoints(pts_wrt_cam.transpose(),
         np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]),
         cam['KK'], cam['distort'])
     pix = pix.transpose()
@@ -54,23 +54,31 @@ if __name__ == '__main__':
     params = args['params']
 
     video_reader = VideoReader(args['video'])
-    rdr_map = loadRDRCamMap(args['map'])
+    print args['radar']
+    rdr_loader = RDRLoader(args['radar'])
+
+    gps_reader_mark1 = GPSReader(args['gps_mark1'])
+    gps_data_mark1 = gps_reader_mark1.getNumericData()
+    gps_times_mark1 = utc_from_gps_log_all(gps_data_mark1)
 
     writer = cv2.VideoWriter('radar_test.avi', cv.CV_FOURCC('X','V', 'I', 'D'),
-                    50.0, (1280,960) )
+                             50.0, (1280,960))
 
     while True:
         for t in xrange(5):
             (success, I) = video_reader.getNextFrame()
 
         frame_num = video_reader.framenum
-        radar_data = loadRDR(rdr_map[frame_num])[0]
 
+        cur_time = gps_times_mark1[frame_num]
+        radar_data = rdr_loader.loadRDRWindow(cur_time)
+        if radar_data == None:
+            continue
         if radar_data.shape[0] > 0:
             # Remove points that have a low radar cross-section
-            # mask = (radar_data[:, 5] > 5)
+            mask = (radar_data[:, 5] > 5)
             # Remove points that are moving too fast (fixed objects)
-            mask = (radar_data[:, 6] > -20)
+            mask &= (radar_data[:, 6] > -20)
             radar_data = radar_data[mask]
 
         if radar_data.shape[0] > 0:
@@ -111,7 +119,7 @@ if __name__ == '__main__':
                 id = int(radar_data[j, 7])
                 s = "%d: %d, %0.2f, %0.2f" % (id, rcs, dist, spd)
                 cv2.putText(I, s, tuple(fr),
-                            cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,255), thickness=1)
+                    cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,255), thickness=1)
 
         cv2.imshow('display', I)
         # writer.write(I)
