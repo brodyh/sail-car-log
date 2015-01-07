@@ -74,19 +74,22 @@ if configurator.exists():
     configurator.get('organized')
     configurator.get('map')
     configurator.get('multilane')
+    configurator.get('planefitting')
 else:
     configurator.set('downloaded', False)
     configurator.set('organized', False)
     configurator.set('map', False)
     configurator.set('multilane', False)
+    configurator.set('planefitting', False)
 
 print configurator.config
 
 if configurator.config['downloaded'] == False:
-    cmd = """rsync --progress -a -L --prune-empty-dirs --include="*.rdr" \
-    --include="*.ldr" --include="*2.avi" --include="*.out" \
-    --include="params.ini" --include="*lanes.pickle" --filter="-! */" \
-    jkiske@gorgon33:~/q50_data/{remote} data/""".format(
+    cmd = """rsync --progress -a -L --prune-empty-dirs --exclude="*_frames/" \
+    --exclude="*_radar" --include="*.rdr" --include="*_frames.tar.gz" \
+    --include="*2.avi" --include="*.out" --include="params.ini" \
+    --include="*lanes.pickle" --filter="-! */" \
+    jkiske@gorgon34:~/q50_data/{remote} data/""".format(
         remote=remote_folder)
 
     tokens = shlex.split(cmd)
@@ -100,8 +103,8 @@ if configurator.config['downloaded'] == False:
         configurator.set('downloaded', True)
 
 if configurator.config['organized'] == False:
-    for video in glob.glob(local_folder + '/split_0*1.avi'):
-        organized_folder = video.replace('split_0_', '').replace('1.avi', '')
+    for video in glob.glob(local_folder + '/split_0*2.avi'):
+        organized_folder = video.replace('split_0_', '').replace('2.avi', '')
         try:
             os.mkdir(organized_folder)
         except OSError:
@@ -123,6 +126,12 @@ if configurator.config['organized'] == False:
                 print old_file, new_file
                 shutil.move(old_file, new_file)
 
+                if '.tar.gz' in new_file:
+                    untar_cmd = 'tar xf %s -C %s' % (new_file,
+                                                     organized_folder)
+                    subprocess.call(untar_cmd.split())
+                    os.remove(new_file)
+
         params = local_folder + '/params.ini'
         folder_params = local_folder + '/' + folder_name + '/params.ini'
         shutil.copy(params, folder_params)
@@ -137,13 +146,16 @@ if configurator.config['map'] == False:
             temp_vid = base + '2.avi'
             args = parse_args(run, temp_vid)
             mb = MapBuilder(args, 1, 600, 0.5, 0.1)
-            mb.buildMap(['no-trees'])
-            output = run + '/' + base + '_bg.npz'
-            mb.exportData(output)
 
-            mb.buildMap(['no-trees', 'ground'])
+            output = run + '/' + base + '_bg.npz'
+            if not os.path.isfile(output):
+                mb.buildMap(['no-trees'])
+                mb.exportData(output)
+
             output = run + '/' + base + '_ground.npz'
-            mb.exportData(output)
+            if not os.path.isfile(output):
+                mb.buildMap(['no-trees', 'ground'])
+                mb.exportData(output)
 
     configurator.set('map', True)
 
@@ -182,3 +194,14 @@ if configurator.config['multilane'] == False:
             subprocess.call(cmd.split())
 
     configurator.set('multilane', True)
+
+if configurator.config['planefitting'] == False:
+        for run in sorted(glob.glob(local_folder + '/*/')):
+            if os.path.isdir(run):
+                print run
+                if len(glob.glob(run + '/*_planar.npz')) == 0:
+                    video = run.split('/')[-2] + '2.avi'
+                    cmd = 'python PlaneFitting.py {run} {video}'
+                    cmd = cmd.format(run=run, video=video)
+                    print cmd
+                    subprocess.call(cmd.split())
